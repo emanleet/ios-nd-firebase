@@ -215,7 +215,13 @@ extension FCViewController: UITableViewDelegate, UITableViewDataSource {
     // dequeue cell
     let cell: UITableViewCell! = messagesTable.dequeueReusableCell(withIdentifier: "messageCell", for: indexPath)
     // TODO: update cell to display message data
-
+    // unpack message from firebase snapshot
+    let messageSnapshot = messages[indexPath.row]
+    let message = messageSnapshot.value as! [String: String]
+    let name = message[Constants.MessageFields.name] ?? "[username]"
+    let text = message[Constants.MessageFields.text] ?? "[message]"
+    cell!.textLabel?.text = name + ": " + text
+    cell!.imageView?.image = self.placeholderImage
     return cell!
   }
   
