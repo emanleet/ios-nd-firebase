@@ -80,6 +80,7 @@ class FCViewController: UIViewController, UINavigationControllerDelegate {
     
     deinit {
         // TODO: set up what needs to be deinitialized when view is no longer being used
+      ref.child("messages").removeObserver(withHandle: _refHandle)
     }
     
     // MARK: Remote Config
@@ -112,6 +113,13 @@ class FCViewController: UIViewController, UINavigationControllerDelegate {
             
             // TODO: Set up app to send and receive messages when signed in
           configureDatabase()
+          // Create a Listener for messages node
+          _refHandle = ref.child("messages").observe(.childAdded) { (snapshot: FIRDataSnapshot) in
+            self.messages.append(snapshot)
+            self.messagesTable.insertRows(at: [IndexPath(row: self.messages.count - 1, section: 0)], with: .automatic)
+            self.scrollToBottomMessage()
+          }
+          
         }
     }
     
