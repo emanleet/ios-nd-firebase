@@ -33,7 +33,9 @@ class FCViewController: UIViewController, UINavigationControllerDelegate {
   var keyboardOnScreen = false
   var placeholderImage = UIImage(named: "ic_account_circle")
   fileprivate var _refHandle: FIRDatabaseHandle!
+  // completionHandler for _authHandle is invoked when app registers itself as a listener, current user changes, current user access changes
   fileprivate var _authHandle: FIRAuthStateDidChangeListenerHandle!
+  // user represents the currently authenticated user
   var user: FIRUser?
   var displayName = "Anonymous"
   
@@ -53,8 +55,7 @@ class FCViewController: UIViewController, UINavigationControllerDelegate {
   // MARK: Life Cycle
   
   override func viewDidLoad() {
-      self.signedInStatus(isSignedIn: true)
-      
+    configureAuth()
       // TODO: Handle what users see when view loads
   }
   
@@ -66,7 +67,27 @@ class FCViewController: UIViewController, UINavigationControllerDelegate {
   // MARK: Config
   
   func configureAuth() {
-      // TODO: configure firebase authentication
+    // TODO: configure firebase authentication
+    // Create Auth Listener
+    _authHandle = FIRAuth.auth()?.addStateDidChangeListener{ (auth: FIRAuth, user: FIRUser?) in
+      // First refresh table since its contents may be out of date or from another user's login
+      self.messages.removeAll(keepingCapacity: false)
+      self.messagesTable.reloadData()
+      
+      // Unwrap user from completionHandler
+      if let activeUser = user {
+        // Check if current app user is the same as the current FIRUser
+        if self.user != activeUser {
+          self.user = activeUser
+          self.signedInStatus(isSignedIn: true)
+          let name = user!.email!.components(separatedBy: "@")[0]
+          self.displayName = name
+        }
+      } else {
+        self.signedInStatus(isSignedIn: false)
+        self.loginSession()
+      }
+    }
   }
   
   func configureDatabase() {
@@ -81,6 +102,7 @@ class FCViewController: UIViewController, UINavigationControllerDelegate {
   deinit {
       // TODO: set up what needs to be deinitialized when view is no longer being used
     ref.child("messages").removeObserver(withHandle: _refHandle)
+    FIRAuth.auth()?.removeStateDidChangeListener(_authHandle)
   }
   
   // MARK: Remote Config
