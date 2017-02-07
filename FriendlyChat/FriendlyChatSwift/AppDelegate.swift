@@ -36,6 +36,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
     
     func application(_ application: UIApplication, open url: URL, sourceApplication: String?, annotation: Any) -> Bool {
+      // Functionality for handling when app transitions to web url like google sign-in page. Handles google passing data back to Friendly Chat
         return FUIAuth.defaultAuthUI()?.handleOpen(url, sourceApplication: sourceApplication ?? "") ?? false
     }
 }
